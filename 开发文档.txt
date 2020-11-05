@@ -1,0 +1,208 @@
+
+<img src="{:style('images/logo.png')}" />
+首先找的是 /home/view/dugujiancheng.tpsaas.bjjun.com/static/images/log.png
+如果没有 找到 /template/pc/rainbow/static/static/images/log.png
+
+
+无限级分类 方法1
+/application/common.php
+getTree1()
+
+
+模板
+优先找到对应模块view下的 dugujiancheng.tpsaas.bjjun.com (站点域名) 模板
+如果站点模板没有，自动找到公共模板
+
+例如：home/view/dugujiancheng.tpsaas.bjjun.com/index/index.html
+如果该路径没有 index.html 
+自动找到 /template/pc/rainbow/index/index.html
+
+
+{:U('Article/detail', ['article_id'=>$li.article_id])}
+
+{:U('Html/index', ['name'=>'detail', 'aid'=>$li.article_id])}
+
+----------- 广告标签 
+<adv pid="550" item="v1" limit="10">
+	{:getPic($v1.ad_code)} //图片路径
+</adv>
+
+ ----------------------------------文章标签 -------------------------------
+gid 分组id (article_cat表：cat_type)
+cid 分类id （article_cat表：cat_id）
+aid 文章id （tp_article表 article_id）
+is_cat 是否只查询分类 1是 0否  只查分类，不查文章
+item 循环变量
+limit="3" 查询条数 如果是单个数字：3，只查3条数据。 limit="2,10" ，第2页，共10条数据。
+order 排序 (默认 add_time desc)
+sql="1" 是否打印sql 1是 0否
+echo="1" 是否打印数据 1就 0否
+all="1" 1:获得所有下级分类 0:只获得下一级的分类 （默认为0） 
+is_count = "1" 是否返回总数 默认为0
+
+注：如果is_count="1" 返回的结果集 data: {count: 8, page: "0", list:数组}
+取数据 多套一个 volist标签 循环list
+<article cid="18" item="art" limit="2" order="add_time desc">
+    <volist name="art" id="art1">
+        {$art1.cat_name}<br>
+        <volist name="art1.child" id="li">
+            {$li.title} /
+        </volist>
+        <br>
+    </volist>
+</article>
+
+取总数量：{$art.count}
+取当前第几页：{$art.page}
+
+
+注：当分类id(cat_id)有值 只查询分类id下一级分类及文章 的数据。 本身的数据和下下级的数据查不到 all="1"可以获得下级所有分类及文章
+
+<article cid="18" item="art" limit="10" order="add_time desc">
+        {$art.cat_name}<br>
+        <volist name="art.child" id="li">
+            {$li.title} /
+        </volist>
+        <br>
+</article>
+
+例如：
+ ----------- 分类 -----------
+新闻 cat_id = 18 
+	新闻资讯 cat_id = 17, parent_id=18
+	建站帮助 cat_id = 19, parent_id=18
+
+ ----------- 文章 -----------
+深圳小伙对相亲对象一见钟情 		article_id = 1 ,cat_id=17
+长沙女业主买下133个车位加价2万卖 	article_id = 2 ,cat_id=17
+
+人类在太空创造出“物质第五态” 		article_id = 1 ,cat_id=19
+"滴滴“黑名单”功能今天开始试运行 	article_id = 2 ,cat_id=19
+
+第一种
+查询分类id为18下面的分类cat_id (17,19)，10条文章数据
+嵌套volist 把二级数组 child 循环出来
+<article cid="18" item="art" limit="10" order="add_time desc">
+        <h3>{$art.cat_name}</h3>
+        <volist name="art.child" id="li">
+            <h5>{$li.title}</h5>
+        </volist>
+</article>
+
+array(2) {
+  [0] => array(11) {
+    ["cat_id"] => int(17)
+    ["store_id"] => int(20)
+    ["cat_name"] => string(12) "新闻资讯"
+    ["child"] => array(4) {
+      [0] => array(18) {
+        ["article_id"] => int(35)
+        ["store_id"] => int(20)
+        ["cat_id"] => int(17)
+        ["title"] => string(57) "深圳小伙对相亲对象一见钟情"
+      }
+      [1] => array(18) {
+        ["article_id"] => int(36)
+        ["store_id"] => int(20)
+        ["cat_id"] => int(17)
+        ["title"] => string(79) "长沙女业主买下133个车位加价2万卖"
+      }
+     }
+    }
+    [1] => array(11) {
+      ["cat_id"] => int(19)
+      ["store_id"] => int(20)
+      ["cat_name"] => string(12) "建站帮助"
+      ["child"] => array(3) {
+        [0] => array(18) {
+          ["article_id"] => int(39)
+          ["store_id"] => int(20)
+          ["cat_id"] => int(19)
+          ["title"] => string(78) "人类在太空创造出“物质第五态"
+	}
+	[1] => array(18) {
+          ["article_id"] => int(40)
+          ["store_id"] => int(20)
+          ["cat_id"] => int(19)
+          ["title"] => string(70) "滴滴“黑名单”功能今天开始试运行"
+	}
+       }
+      }
+}
+
+第二种
+如果分类id下没有分类，直接查询文章分类id为19的10条文章
+cid 可支持多个 cid="17,18,19"
+<article cid="19" item="art" limit="10">
+	<h3>{$art.title}</h3>
+</article>
+
+第三种
+直接查询文章id为35的一条数据
+<article aid="35" item="art">
+	<h3>{$art.title}</h3>
+</article>
+
+-----------------------------------------不需要控制器，单个html-------------------------------
+{:U('Html/index', ['name'=>'test'])}	/view/html/test.html
+{:U('Html/index', ['name'=>'test#index'])}	/view/html/test/index.html
+
+
+
+-----------------------------------------查询方法封装-----------------------------------------
+/**
+     * 查询单条记录
+     * @param array $where  查询条件 数组形式
+     * @param bool $fields  查询字段 默认为 true
+     * @param string $order 排序
+     * @return array
+     * @throws Exception
+     * @throws db\exception\DataNotFoundException
+     * @throws db\exception\ModelNotFoundException
+     * @throws exception\DbException
+     */
+    D('test')->getInfo($where=[], $fields=true, $order='')
+
+    /**
+     * 查询多条记录
+     * @param array $where  查询条件 数组形式
+     * @param bool $fields  查询字段 默认为 true
+     * @param array $page   分页 [0, 10] 或者 10
+     * @param string $order 排序
+     * @param int $is_count 是否返回记录总数
+     * @return array
+     * @throws db\exception\DataNotFoundException
+     * @throws db\exception\ModelNotFoundException
+     * @throws exception\DbException
+     */
+    D('test')->getList($where, $fields, $page, $order, $is_count)
+
+    /**
+     * 关联查询多条记录
+     * @param array $where  查询条件 数组形式
+     * @param string $join  join 语句
+     * @param string $alias 别名 默认为 n
+     * @param bool $fields  查询字段 默认为 true
+     * @param array $page   分页 [0, 10] 或者 10
+     * @param string $order 排序
+     * @param int $is_count 是否返回记录总数
+     * @return array
+     * @throws db\exception\DataNotFoundException
+     * @throws db\exception\ModelNotFoundException
+     * @throws exception\DbException
+     */
+    D('test')->getJoinList($where, $join, $alias, $fields, $page, $order, $is_count)
+
+    /**
+     * 关联查询单条记录
+     * @param array $where  查询条件 数组形式
+     * @param string $join  join 语句
+     * @param string $alias 别名 默认为 n
+     * @param bool $fields  查询字段 默认为 true
+     * @return mixed
+     * @throws db\exception\DataNotFoundException
+     * @throws db\exception\ModelNotFoundException
+     * @throws exception\DbException
+     */
+    D('test')->getJoinInfo($where, $join, $alias, $fields)
+
